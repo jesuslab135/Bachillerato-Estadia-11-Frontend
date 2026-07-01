@@ -59,7 +59,7 @@ function ParcialCard({ cursoId, parcial }: { cursoId: string; parcial: Parcial }
   };
 
   return (
-    <Card withBorder radius="md">
+    <Card withBorder radius="md" className="sga-card-hover">
       <Group justify="space-between" mb="sm">
         <Title order={4}>Parcial {parcial.numero}</Title>
         <Badge color={COLOR_ESTADO[parcial.estado] ?? 'gray'}>{parcial.estado}</Badge>
@@ -126,7 +126,7 @@ export function ParcialesPage() {
   if (isError) return <Alert color="red">No fue posible cargar los parciales.</Alert>;
 
   return (
-    <Stack>
+    <Stack className="sga-anim-in">
       <Title order={3}>Parciales y ponderación</Title>
       {(data ?? []).map((p) => (
         <ParcialCard key={p.numero} cursoId={cursoId} parcial={p} />

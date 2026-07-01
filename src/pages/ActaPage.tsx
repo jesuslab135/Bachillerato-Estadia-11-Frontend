@@ -53,7 +53,7 @@ export function ActaPage() {
   if (isError || !acta) return <Alert color="yellow">El acta aún no se ha generado (valida los 3 parciales).</Alert>;
 
   return (
-    <Stack>
+    <Stack className="sga-anim-in">
       <Group justify="space-between">
         <Title order={3}>Acta semestral · v{acta.version}</Title>
         <Group>

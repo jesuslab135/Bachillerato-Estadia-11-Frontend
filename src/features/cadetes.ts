@@ -60,7 +60,22 @@ export function useActualizarCadete(grupoId: string | null) {
 export function useImportarCadetes(grupoId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (csv: string) => (await api.post<ResultadoImport>('/api/cadetes/import', { csv })).data,
+    // FB-F-7: el grupo seleccionado va como defecto; una columna grupoId en el CSV lo sobreescribe.
+    mutationFn: async (csv: string) =>
+      (await api.post<ResultadoImport>('/api/cadetes/import', { csv, grupoIdPorDefecto: grupoId ?? undefined })).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['cadetes', grupoId] }),
+  });
+}
+
+export function useImportarArchivo(grupoId: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (archivo: File) => {
+      const fd = new FormData();
+      fd.append('archivo', archivo);
+      const url = grupoId ? `/api/cadetes/import/archivo?grupoId=${encodeURIComponent(grupoId)}` : '/api/cadetes/import/archivo';
+      return (await api.post<ResultadoImport>(url, fd)).data;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['cadetes', grupoId] }),
   });
 }

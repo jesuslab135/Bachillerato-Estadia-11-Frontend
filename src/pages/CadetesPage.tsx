@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Button, Card, Group, Loader, Select, Stack, Table, Text, Textarea, TextInput, Title } from '@mantine/core';
+import { Alert, Button, Card, FileInput, Group, Loader, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { mensajeError } from '../api/errores';
 import {
@@ -9,8 +9,9 @@ import {
   useCadetes,
   useCrearCadete,
   useGrupos,
-  useImportarCadetes,
+  useImportarArchivo,
   type EstatusCadete,
+  type ResultadoImport,
 } from '../features/cadetes';
 
 function Nuevo({ grupoId }: { grupoId: string }) {
@@ -45,32 +46,53 @@ function Nuevo({ grupoId }: { grupoId: string }) {
   );
 }
 
+function notificarResultado(r: ResultadoImport) {
+  notifications.show({
+    color: r.errores.length > 0 ? 'yellow' : 'green',
+    message: resumenImport(r) + (r.errores.length ? `: ${r.errores.map((e) => `[${e.indice}] ${e.motivo}`).join('; ')}` : ''),
+  });
+}
+
 function Importar({ grupoId }: { grupoId: string }) {
-  const importar = useImportarCadetes(grupoId);
-  const [csv, setCsv] = useState(`matricula,nombreCompleto,grupoId\nMAT-001,Nombre Apellido,${grupoId}`);
+  const importarArchivo = useImportarArchivo(grupoId);
+  const [archivo, setArchivo] = useState<File | null>(null);
+
   return (
     <Stack>
-      <Text fw={600}>Importar CSV</Text>
+      <Text fw={600}>Importar cadetes al grupo seleccionado</Text>
       <Text size="xs" c="dimmed">
-        Encabezados: matricula, nombreCompleto, grupoId. Las duplicadas y erróneas se reportan sin abortar las válidas (RF-CAT-07).
+        Sube un archivo .csv o .xlsx con encabezados: matricula, nombreCompleto. Se asigna al
+        grupo elegido arriba (una columna grupoId opcional lo sobreescribe). Las duplicadas y
+        erróneas se reportan sin abortar las válidas (RF-CAT-07).
       </Text>
-      <Textarea autosize minRows={3} value={csv} onChange={(e) => setCsv(e.currentTarget.value)} />
-      <Button
-        variant="light"
-        loading={importar.isPending}
-        onClick={() =>
-          importar.mutate(csv, {
-            onSuccess: (r) =>
-              notifications.show({
-                color: r.errores.length > 0 ? 'yellow' : 'green',
-                message: resumenImport(r) + (r.errores.length ? `: ${r.errores.map((e) => `[${e.indice}] ${e.motivo}`).join('; ')}` : ''),
-              }),
-            onError: (e) => notifications.show({ color: 'red', message: mensajeError(e, 'No fue posible importar') }),
-          })
-        }
-      >
-        Importar
-      </Button>
+
+      <Group align="flex-end">
+        <FileInput
+          label="Archivo (.csv o .xlsx)"
+          placeholder="Elige un archivo"
+          accept=".csv,.xlsx"
+          value={archivo}
+          onChange={setArchivo}
+          w={320}
+          aria-label="Archivo de cadetes CSV o XLSX"
+        />
+        <Button
+          disabled={!archivo}
+          loading={importarArchivo.isPending}
+          onClick={() =>
+            archivo &&
+            importarArchivo.mutate(archivo, {
+              onSuccess: (r) => {
+                setArchivo(null);
+                notificarResultado(r);
+              },
+              onError: (e) => notifications.show({ color: 'red', message: mensajeError(e, 'No fue posible importar el archivo') }),
+            })
+          }
+        >
+          Importar archivo
+        </Button>
+      </Group>
     </Stack>
   );
 }
@@ -84,7 +106,7 @@ export function CadetesPage() {
   if (isLoading) return <Loader />;
 
   return (
-    <Stack>
+    <Stack className="sga-anim-in">
       <Title order={3}>Cadetes</Title>
       <Select
         label="Grupo"

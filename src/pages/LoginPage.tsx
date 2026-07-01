@@ -37,7 +37,7 @@ export function LoginPage() {
       <Title order={2} ta="center" mb="lg">
         SGA-Militar
       </Title>
-      <Paper withBorder shadow="sm" p="xl" radius="md">
+      <Paper withBorder shadow="sm" p="xl" radius="md" className="sga-anim-in">
         <form onSubmit={enviar}>
           <Stack>
             <TextInput label="Correo" placeholder="usuario@sga.local" {...form.getInputProps('email')} />

@@ -1,5 +1,20 @@
 import { useState } from 'react';
-import { Alert, Badge, Button, Card, Group, NumberInput, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CopyButton,
+  Group,
+  NumberInput,
+  Select,
+  Stack,
+  Table,
+  Tabs,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { mensajeError } from '../api/errores';
 import { useAuth } from '../auth/AuthContext';
@@ -25,37 +40,82 @@ function fail(e: unknown, def: string) {
   notifications.show({ color: 'red', message: mensajeError(e, def) });
 }
 
+function Vacio({ colSpan, texto }: { colSpan: number; texto: string }) {
+  return (
+    <Table.Tr>
+      <Table.Td colSpan={colSpan}>
+        <Text c="dimmed" size="sm">
+          {texto}
+        </Text>
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
 function SeccionGrupos({ plantelId }: { plantelId: string }) {
   const { data: grupos } = useGrupos();
   const crear = useCrearGrupo();
   const [nombre, setNombre] = useState('');
   const [semestre, setSemestre] = useState<number | string>(1);
   return (
-    <Card withBorder radius="md">
-      <Title order={4} mb="sm">
-        Grupos
-      </Title>
-      <Group align="flex-end" mb="sm">
-        <TextInput label="Nombre" placeholder="2do A" value={nombre} onChange={(e) => setNombre(e.currentTarget.value)} />
-        <NumberInput label="Semestre" w={110} min={1} max={6} value={semestre} onChange={setSemestre} />
-        <Button
-          variant="light"
-          disabled={!nombre.trim()}
-          loading={crear.isPending}
-          onClick={() =>
-            crear.mutate(
-              { plantelId, nombre: nombre.trim(), semestre: Number(semestre) },
-              { onSuccess: () => { setNombre(''); ok('Grupo creado'); }, onError: (e) => fail(e, 'No fue posible crear el grupo') },
-            )
-          }
-        >
-          Agregar grupo
-        </Button>
-      </Group>
-      <Text size="sm" c="dimmed">
-        {(grupos ?? []).map((g) => `${g.nombre} (sem. ${g.semestre})`).join(' · ') || 'Sin grupos'}
-      </Text>
-    </Card>
+    <Stack>
+      <Card withBorder>
+        <Title order={5} mb="sm">
+          Nuevo grupo
+        </Title>
+        <Group align="flex-end">
+          <TextInput label="Nombre" placeholder="2do A" value={nombre} onChange={(e) => setNombre(e.currentTarget.value)} />
+          <NumberInput label="Semestre" w={110} min={1} max={6} value={semestre} onChange={setSemestre} />
+          <Button
+            disabled={!nombre.trim()}
+            loading={crear.isPending}
+            onClick={() =>
+              crear.mutate(
+                { plantelId, nombre: nombre.trim(), semestre: Number(semestre) },
+                { onSuccess: () => { setNombre(''); ok('Grupo creado'); }, onError: (e) => fail(e, 'No fue posible crear el grupo') },
+              )
+            }
+          >
+            Agregar grupo
+          </Button>
+        </Group>
+      </Card>
+
+      <Table.ScrollContainer minWidth={520}>
+        <Table striped withTableBorder highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Nombre</Table.Th>
+              <Table.Th>Semestre</Table.Th>
+              <Table.Th>ID (para importar)</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {(grupos ?? []).map((g) => (
+              <Table.Tr key={g.id}>
+                <Table.Td>{g.nombre}</Table.Td>
+                <Table.Td>{g.semestre}</Table.Td>
+                <Table.Td>
+                  <Group gap="xs" wrap="nowrap">
+                    <Text size="xs" c="dimmed" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+                      {g.id}
+                    </Text>
+                    <CopyButton value={g.id}>
+                      {({ copied, copy }) => (
+                        <Button size="xs" variant="subtle" onClick={copy}>
+                          {copied ? 'Copiado' : 'Copiar'}
+                        </Button>
+                      )}
+                    </CopyButton>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+            {(grupos ?? []).length === 0 && <Vacio colSpan={3} texto="Aún no hay grupos." />}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </Stack>
   );
 }
 
@@ -67,46 +127,58 @@ function SeccionPeriodos({ plantelId }: { plantelId: string }) {
   const [inicio, setInicio] = useState('');
   const [fin, setFin] = useState('');
   return (
-    <Card withBorder radius="md">
-      <Title order={4} mb="sm">
-        Periodos
-      </Title>
-      <Group align="flex-end" mb="sm">
-        <TextInput label="Código" placeholder="2025-2026-1" value={codigo} onChange={(e) => setCodigo(e.currentTarget.value)} />
-        <TextInput type="date" label="Inicio" value={inicio} onChange={(e) => setInicio(e.currentTarget.value)} />
-        <TextInput type="date" label="Fin" value={fin} onChange={(e) => setFin(e.currentTarget.value)} />
-        <Button
-          variant="light"
-          disabled={!codigo.trim() || !inicio || !fin}
-          loading={crear.isPending}
-          onClick={() =>
-            crear.mutate(
-              { plantelId, codigo: codigo.trim(), fechaInicio: inicio, fechaFin: fin },
-              { onSuccess: () => { setCodigo(''); ok('Periodo creado'); }, onError: (e) => fail(e, 'No fue posible crear el periodo') },
-            )
-          }
-        >
-          Agregar periodo
-        </Button>
-      </Group>
-      <Table withTableBorder>
-        <Table.Tbody>
-          {(periodos ?? []).map((p) => (
-            <Table.Tr key={p.id}>
-              <Table.Td>{p.codigo}</Table.Td>
-              <Table.Td>{p.activo ? <Badge color="green">Activo</Badge> : <Badge color="gray">Inactivo</Badge>}</Table.Td>
-              <Table.Td>
-                {!p.activo && (
-                  <Button size="xs" variant="subtle" loading={activar.isPending} onClick={() => activar.mutate(p.id, { onSuccess: () => ok('Periodo activado'), onError: (e) => fail(e, 'No fue posible activar') })}>
-                    Activar
-                  </Button>
-                )}
-              </Table.Td>
+    <Stack>
+      <Card withBorder>
+        <Title order={5} mb="sm">
+          Nuevo periodo
+        </Title>
+        <Group align="flex-end">
+          <TextInput label="Código" placeholder="2025-2026-1" value={codigo} onChange={(e) => setCodigo(e.currentTarget.value)} />
+          <TextInput type="date" label="Inicio" value={inicio} onChange={(e) => setInicio(e.currentTarget.value)} />
+          <TextInput type="date" label="Fin" value={fin} onChange={(e) => setFin(e.currentTarget.value)} />
+          <Button
+            disabled={!codigo.trim() || !inicio || !fin}
+            loading={crear.isPending}
+            onClick={() =>
+              crear.mutate(
+                { plantelId, codigo: codigo.trim(), fechaInicio: inicio, fechaFin: fin },
+                { onSuccess: () => { setCodigo(''); ok('Periodo creado'); }, onError: (e) => fail(e, 'No fue posible crear el periodo') },
+              )
+            }
+          >
+            Agregar periodo
+          </Button>
+        </Group>
+      </Card>
+
+      <Table.ScrollContainer minWidth={520}>
+        <Table striped withTableBorder highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Código</Table.Th>
+              <Table.Th>Estado</Table.Th>
+              <Table.Th />
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    </Card>
+          </Table.Thead>
+          <Table.Tbody>
+            {(periodos ?? []).map((p) => (
+              <Table.Tr key={p.id}>
+                <Table.Td>{p.codigo}</Table.Td>
+                <Table.Td>{p.activo ? <Badge color="teal">Activo</Badge> : <Badge color="gray">Inactivo</Badge>}</Table.Td>
+                <Table.Td>
+                  {!p.activo && (
+                    <Button size="xs" variant="subtle" loading={activar.isPending} onClick={() => activar.mutate(p.id, { onSuccess: () => ok('Periodo activado'), onError: (e) => fail(e, 'No fue posible activar') })}>
+                      Activar
+                    </Button>
+                  )}
+                </Table.Td>
+              </Table.Tr>
+            ))}
+            {(periodos ?? []).length === 0 && <Vacio colSpan={3} texto="Aún no hay periodos." />}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </Stack>
   );
 }
 
@@ -121,36 +193,56 @@ function SeccionCursos() {
   const set = (k: keyof FormCurso) => (v: string | null) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
-    <Card withBorder radius="md">
-      <Title order={4} mb="sm">
-        Cursos
-      </Title>
-      <Group align="flex-end" mb="sm" wrap="wrap">
-        <Select label="Materia" w={200} searchable data={(materias ?? []).map((m) => ({ value: m.id, label: `${m.clave} — ${m.nombre}` }))} value={form.materiaId} onChange={set('materiaId')} />
-        <Select label="Grupo" w={150} data={(grupos ?? []).map((g) => ({ value: g.id, label: g.nombre }))} value={form.grupoId} onChange={set('grupoId')} />
-        <Select label="Docente" w={200} data={(docentes ?? []).map((d) => ({ value: d.id, label: d.nombreCompleto }))} value={form.docenteId} onChange={set('docenteId')} />
-        <Select label="Periodo" w={160} data={(periodos ?? []).map((p) => ({ value: p.id, label: p.codigo }))} value={form.periodoId} onChange={set('periodoId')} />
-        <Button
-          variant="light"
-          disabled={!cursoCompleto(form)}
-          loading={crear.isPending}
-          onClick={() =>
-            crear.mutate(
-              { materiaId: form.materiaId!, grupoId: form.grupoId!, docenteId: form.docenteId!, periodoId: form.periodoId! },
-              {
-                onSuccess: () => { setForm({ materiaId: null, grupoId: null, docenteId: null, periodoId: null }); ok('Curso creado (3 parciales + 15 criterios)'); },
-                onError: (e) => fail(e, 'No fue posible crear el curso'),
-              },
-            )
-          }
-        >
-          Crear curso
-        </Button>
-      </Group>
-      <Text size="sm" c="dimmed">
-        {(cursos ?? []).map((c) => `${c.materia.clave}·${c.grupo.nombre}`).join(' · ') || 'Sin cursos'}
-      </Text>
-    </Card>
+    <Stack>
+      <Card withBorder>
+        <Title order={5} mb="sm">
+          Nuevo curso
+        </Title>
+        <Group align="flex-end" wrap="wrap">
+          <Select label="Materia" w={200} searchable data={(materias ?? []).map((m) => ({ value: m.id, label: `${m.clave} — ${m.nombre}` }))} value={form.materiaId} onChange={set('materiaId')} />
+          <Select label="Grupo" w={150} data={(grupos ?? []).map((g) => ({ value: g.id, label: g.nombre }))} value={form.grupoId} onChange={set('grupoId')} />
+          <Select label="Docente" w={200} data={(docentes ?? []).map((d) => ({ value: d.id, label: d.nombreCompleto }))} value={form.docenteId} onChange={set('docenteId')} />
+          <Select label="Periodo" w={160} data={(periodos ?? []).map((p) => ({ value: p.id, label: p.codigo }))} value={form.periodoId} onChange={set('periodoId')} />
+          <Button
+            disabled={!cursoCompleto(form)}
+            loading={crear.isPending}
+            onClick={() =>
+              crear.mutate(
+                { materiaId: form.materiaId!, grupoId: form.grupoId!, docenteId: form.docenteId!, periodoId: form.periodoId! },
+                {
+                  onSuccess: () => { setForm({ materiaId: null, grupoId: null, docenteId: null, periodoId: null }); ok('Curso creado (3 parciales + 15 criterios)'); },
+                  onError: (e) => fail(e, 'No fue posible crear el curso'),
+                },
+              )
+            }
+          >
+            Crear curso
+          </Button>
+        </Group>
+      </Card>
+
+      <Table.ScrollContainer minWidth={520}>
+        <Table striped withTableBorder highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Materia</Table.Th>
+              <Table.Th>Grupo</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {(cursos ?? []).map((c) => (
+              <Table.Tr key={c.id}>
+                <Table.Td>
+                  {c.materia.clave} — {c.materia.nombre}
+                </Table.Td>
+                <Table.Td>{c.grupo.nombre}</Table.Td>
+              </Table.Tr>
+            ))}
+            {(cursos ?? []).length === 0 && <Vacio colSpan={2} texto="Aún no hay cursos." />}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </Stack>
   );
 }
 
@@ -161,7 +253,7 @@ export function CatalogosPage() {
   const plantelId = sesion?.plantelId ?? plantelSel;
 
   return (
-    <Stack>
+    <Stack className="sga-anim-in">
       <Title order={3}>Catálogos y cursos</Title>
       {!sesion?.plantelId && (
         <Select
@@ -176,11 +268,22 @@ export function CatalogosPage() {
       {!plantelId ? (
         <Alert color="blue">Selecciona un plantel para administrar sus catálogos.</Alert>
       ) : (
-        <>
-          <SeccionGrupos plantelId={plantelId} />
-          <SeccionPeriodos plantelId={plantelId} />
-          <SeccionCursos />
-        </>
+        <Tabs defaultValue="grupos" keepMounted={false}>
+          <Tabs.List>
+            <Tabs.Tab value="grupos">Grupos</Tabs.Tab>
+            <Tabs.Tab value="periodos">Periodos</Tabs.Tab>
+            <Tabs.Tab value="cursos">Cursos</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="grupos" pt="md">
+            <SeccionGrupos plantelId={plantelId} />
+          </Tabs.Panel>
+          <Tabs.Panel value="periodos" pt="md">
+            <SeccionPeriodos plantelId={plantelId} />
+          </Tabs.Panel>
+          <Tabs.Panel value="cursos" pt="md">
+            <SeccionCursos />
+          </Tabs.Panel>
+        </Tabs>
       )}
     </Stack>
   );

@@ -44,7 +44,7 @@ export function CambiarContrasenaPage() {
           Es tu primer ingreso: define una contraseña nueva para continuar.
         </Text>
       )}
-      <Paper withBorder shadow="sm" p="xl" radius="md">
+      <Paper withBorder shadow="sm" p="xl" radius="md" className="sga-anim-in">
         <form onSubmit={enviar}>
           <Stack>
             <PasswordInput label="Contraseña actual" {...form.getInputProps('actual')} />

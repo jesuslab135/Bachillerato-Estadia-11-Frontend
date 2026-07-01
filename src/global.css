@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sistema de diseño (FB-F-1/3/4) — capa global. */
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #ffffff; /* canvas */
+  color: #475569; /* body — slate-600 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Firma de la display face (Cal Sans → Inter 600): tracking negativo en títulos. */
+.mantine-Title-root,
+h1,
+h2,
+h3 {
+  letter-spacing: -0.04em;
+}
+
+/* Animación de entrada de contenido (FB-F-4). Sobria. */
+@keyframes sga-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sga-anim-in {
+  animation: sga-fade-up 260ms ease-out both;
+}
+
+/* Elevación al pasar el cursor sobre tarjetas interactivas. */
+.sga-card-hover {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.sga-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(29, 78, 216, 0.12);
+}
+
+/* Respeta la preferencia del usuario: sin movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

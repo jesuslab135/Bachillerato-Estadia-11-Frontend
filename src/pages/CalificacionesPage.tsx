@@ -264,7 +264,7 @@ export function CalificacionesPage() {
   const { data: matriz, isLoading, isError } = useMatriz(cursoId, numero);
 
   return (
-    <Stack>
+    <Stack className="sga-anim-in">
       <Group justify="space-between">
         <Title order={3}>Calificaciones — Parcial {parcial}</Title>
         <SegmentedControl value={parcial} onChange={setParcial} data={['1', '2', '3']} />

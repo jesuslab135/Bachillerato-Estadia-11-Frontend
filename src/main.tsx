@@ -5,6 +5,7 @@ import { MantineProvider, ColorSchemeScript } from '@mantine/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import './global.css';
 import { Notifications } from '@mantine/notifications';
 import { theme } from './theme';
 import { AuthProvider } from './auth/AuthContext';

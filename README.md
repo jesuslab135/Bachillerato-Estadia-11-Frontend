@@ -1,7 +1,9 @@
 # SGA-Militar — frontend (I9)
 
-PWA en **Vite + React + TypeScript**, con **Mantine** (componentes/a11y) y **TanStack Query**
-(server-state). Consume la API NestJS de `../backend` (prefijo `/api`).
+PWA en **Vite + React + TypeScript**, con **Mantine** (componentes/a11y) + **Tailwind**
+(utilidades y tema azul institucional #1d4ed8, `preflight:false` para convivir con Mantine) y
+**TanStack Query** (server-state). Consume la API NestJS de `../backend` (prefijo `/api`).
+Todas las dependencias se instalan con `npm install` (incluye Tailwind/PostCSS); sin pasos manuales.
 
 ## Requisitos
 - Node 20+. El backend debe correr en `http://localhost:3000` (ver `../backend/README.md`).

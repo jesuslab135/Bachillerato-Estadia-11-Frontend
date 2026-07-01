@@ -25,7 +25,16 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': { target: 'http://localhost:3000', changeOrigin: true },
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        // Mensaje claro cuando el backend no está arriba: evita ver un 500 opaco en el navegador.
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.error(`\n[proxy] No se pudo contactar al backend en http://localhost:3000 (${err.message}). ¿Está corriendo 'npm run start:dev' en backend/?\n`);
+          });
+        },
+      },
     },
   },
 });

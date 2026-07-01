@@ -10,11 +10,11 @@ export function CursosPage() {
 
   const cursos = data ?? [];
   return (
-    <Stack>
+    <Stack className="sga-anim-in">
       <Title order={3}>Cursos</Title>
       {cursos.length === 0 && <Text c="dimmed">No hay cursos visibles para tu plantel.</Text>}
       {cursos.map((c) => (
-        <Card key={c.id} withBorder radius="md">
+        <Card key={c.id} withBorder radius="md" className="sga-card-hover">
           <Group justify="space-between">
             <Text fw={600}>
               {c.materia.clave} — {c.materia.nombre} · {c.grupo.nombre}

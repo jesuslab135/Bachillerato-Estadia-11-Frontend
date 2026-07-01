@@ -57,7 +57,7 @@ export function AsistenciaPage() {
   };
 
   return (
-    <Stack>
+    <Stack className="sga-anim-in">
       <Title order={3}>
         Asistencia · {curso.materia.clave} — {curso.grupo.nombre}
       </Title>
