@@ -15,6 +15,7 @@ export function CambiarContrasenaPage() {
   const form = useForm({
     initialValues: { actual: '', nueva: '', confirmar: '' },
     validate: {
+      actual: (v) => (v.length > 0 ? null : 'Captura tu contraseña actual'),
       nueva: (v) => (v.length >= 8 ? null : 'Mínimo 8 caracteres'),
       confirmar: (v, values) => (v === values.nueva ? null : 'No coincide'),
     },

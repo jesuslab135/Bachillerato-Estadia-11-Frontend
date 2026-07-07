@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Alert, Badge, Button, Card, Group, Loader, NumberInput, Stack, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Card, Group, Loader, Modal, NumberInput, Stack, Text, Textarea, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { mensajeError } from '../api/errores';
 import { useAuth } from '../auth/AuthContext';
@@ -15,6 +15,9 @@ import {
   type Parcial,
   type Pesos,
 } from '../features/parciales';
+
+// El backend exige un motivo de reapertura de al menos 30 caracteres (RN-06).
+const MIN_MOTIVO = 30;
 
 const COLOR_ESTADO: Record<string, string> = {
   Borrador: 'gray',
@@ -39,23 +42,35 @@ function ParcialCard({ cursoId, parcial }: { cursoId: string; parcial: Parcial }
 
   const set = (k: keyof Pesos) => (v: number | string) => setPesos((p) => ({ ...p, [k]: typeof v === 'number' ? v : Number(v) || 0 }));
 
-  const ejecutar = (accion: AccionWorkflow) => {
-    let motivo: string | undefined;
-    let comentario: string | undefined;
-    if (accion === 'reabrir') {
-      motivo = window.prompt('Motivo de reapertura (mínimo 30 caracteres):') ?? undefined;
-      if (!motivo) return;
-    } else if (accion === 'devolver') {
-      comentario = window.prompt('Comentario de devolución:') ?? undefined;
-      if (!comentario) return;
-    }
+  const [modalReabrir, setModalReabrir] = useState(false);
+  const [motivoReapertura, setMotivoReapertura] = useState('');
+  const motivoValido = motivoReapertura.trim().length >= MIN_MOTIVO;
+
+  const mutarTransicion = (accion: AccionWorkflow, extras: { motivo?: string; comentario?: string } = {}) =>
     transicion.mutate(
-      { numero: parcial.numero, accion, motivo, comentario },
+      { numero: parcial.numero, accion, ...extras },
       {
-        onSuccess: () => notifications.show({ color: 'green', message: `Parcial ${parcial.numero}: ${accion} aplicado` }),
+        onSuccess: () => {
+          setModalReabrir(false);
+          notifications.show({ color: 'green', message: `Parcial ${parcial.numero}: ${accion} aplicado` });
+        },
         onError: (e) => notifications.show({ color: 'red', message: mensajeError(e, `No fue posible ${accion}`) }),
       },
     );
+
+  const ejecutar = (accion: AccionWorkflow) => {
+    if (accion === 'reabrir') {
+      setMotivoReapertura('');
+      setModalReabrir(true);
+      return;
+    }
+    if (accion === 'devolver') {
+      const comentario = window.prompt('Comentario de devolución:') ?? undefined;
+      if (!comentario) return;
+      mutarTransicion(accion, { comentario });
+      return;
+    }
+    mutarTransicion(accion);
   };
 
   return (
@@ -114,6 +129,40 @@ function ParcialCard({ cursoId, parcial }: { cursoId: string; parcial: Parcial }
           ))}
         </Group>
       )}
+
+      <Modal
+        opened={modalReabrir}
+        onClose={() => setModalReabrir(false)}
+        title={`Reabrir parcial ${parcial.numero}`}
+        centered
+      >
+        <Stack>
+          <Textarea
+            label="Motivo de reapertura"
+            description={`Mínimo ${MIN_MOTIVO} caracteres; queda registrado en la bitácora (RN-06).`}
+            autosize
+            minRows={3}
+            value={motivoReapertura}
+            onChange={(e) => setMotivoReapertura(e.currentTarget.value)}
+            data-autofocus
+          />
+          <Text size="xs" c={motivoValido ? 'dimmed' : 'red'}>
+            {motivoReapertura.trim().length}/{MIN_MOTIVO} caracteres
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setModalReabrir(false)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={!motivoValido}
+              loading={transicion.isPending}
+              onClick={() => mutarTransicion('reabrir', { motivo: motivoReapertura.trim() })}
+            >
+              Reabrir parcial
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Card>
   );
 }

@@ -9,16 +9,40 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['pwa-192.png', 'pwa-512.png'],
       manifest: {
         name: 'SGA-Militar',
         short_name: 'SGA',
         description: 'Sistema de Gestión Académica Multi-Plantel',
         lang: 'es-MX',
-        theme_color: '#1f2d3d',
-        background_color: '#ffffff',
+        theme_color: '#0b1e40',
+        background_color: '#0b1e40',
         display: 'standalone',
         start_url: '/',
-        icons: [],
+        // Iconos placeholder de marca (FB-F-12); sustituir por el logo real del plantel.
+        icons: [
+          { src: '/pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // FB-F-12 (RF-ASIS-06): los GET de /api sobreviven una recarga offline. NetworkFirst con
+        // timeout corto para no servir datos viejos con red. El cache no distingue el header
+        // Authorization ⇒ dispositivo personal asumido; al cerrar sesión se limpian los caches.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/api/'),
+            handler: 'NetworkFirst',
+            method: 'GET',
+            options: {
+              cacheName: 'sga-api',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

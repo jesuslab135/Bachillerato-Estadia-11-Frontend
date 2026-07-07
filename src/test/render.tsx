@@ -8,7 +8,7 @@ import { AuthProvider } from '../auth/AuthContext';
 /** Envuelve un componente con los providers de la app para pruebas. */
 export function renderConProviders(ui: ReactNode, { route = '/' }: { route?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
+  const resultado = render(
     <MantineProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
@@ -17,6 +17,7 @@ export function renderConProviders(ui: ReactNode, { route = '/' }: { route?: str
       </QueryClientProvider>
     </MantineProvider>,
   );
+  return { ...resultado, queryClient };
 }
 
 /** Construye un JWT de prueba (sin firma real) con el payload dado. */

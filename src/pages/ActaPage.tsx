@@ -26,6 +26,7 @@ function RecuperacionCell({ cursoId, fila }: { cursoId: string; fila: FilaActa }
       <Button
         size="xs"
         variant="light"
+        disabled={valor === ''}
         loading={capturar.isPending}
         onClick={() =>
           capturar.mutate(
@@ -57,7 +58,16 @@ export function ActaPage() {
       <Group justify="space-between">
         <Title order={3}>Acta semestral · v{acta.version}</Title>
         <Group>
-          <Button variant="light" loading={firmar.isPending} onClick={() => firmar.mutate()}>
+          <Button
+            variant="light"
+            loading={firmar.isPending}
+            onClick={() =>
+              firmar.mutate(undefined, {
+                onSuccess: () => notifications.show({ color: 'green', message: 'Acta firmada' }),
+                onError: (e) => notifications.show({ color: 'red', message: mensajeError(e, 'No fue posible firmar el acta') }),
+              })
+            }
+          >
             Firmar
           </Button>
           <Button
@@ -66,6 +76,7 @@ export function ActaPage() {
             onClick={() =>
               exportar.mutate(undefined, {
                 onSuccess: (r) => notifications.show({ color: 'green', message: `Exportada · hash ${r.hash.slice(0, 12)}…` }),
+                onError: (e) => notifications.show({ color: 'red', message: mensajeError(e, 'No fue posible exportar el acta') }),
               })
             }
           >

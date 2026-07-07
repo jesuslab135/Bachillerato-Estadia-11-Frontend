@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { api, tokenStore } from '../api/client';
+import { queryClient } from '../api/queryClient';
 import { decodificarSesion, type Sesion } from './jwt';
 
 interface AuthContextValor {
@@ -37,6 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const salir = useCallback(() => {
     tokenStore.clear();
     setSesion(null);
+    // FB-F-14: sin datos del usuario anterior en una máquina compartida.
+    queryClient.clear();
+    // FB-F-12: los caches del SW (incluido el runtime de /api) pueden contener datos del
+    // usuario saliente; se limpian al cerrar sesión (guardado para entornos sin `caches`).
+    if (typeof caches !== 'undefined') {
+      void caches.keys().then((claves) => Promise.all(claves.map((c) => caches.delete(c)))).catch(() => {});
+    }
   }, []);
 
   const valor = useMemo<AuthContextValor>(() => ({ sesion, ingresar, refrescar: aplicarToken, salir }), [sesion, ingresar, aplicarToken, salir]);

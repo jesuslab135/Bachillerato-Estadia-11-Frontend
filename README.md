@@ -16,18 +16,38 @@ npm run dev                 # http://localhost:5173  (proxy /api → :3000)
 npm run build               # tsc -b + vite build (genera PWA/service worker)
 npm run typecheck           # solo verificación de tipos
 npm test                    # Vitest + Testing Library (jsdom)
+npm run lint                # ESLint 9 (flat config: typescript-eslint + react-hooks + jsx-a11y)
 ```
+
+## PWA
+- `vite.config.ts` define el manifest (iconos 192/512 `any maskable`, `theme_color` navy
+  `#0b1e40`) y `workbox.runtimeCaching`: los **GET same-origin de `/api/`** usan `NetworkFirst`
+  (timeout 3 s, máx. 100 entradas / 7 días) para que cursos/roster sobrevivan una recarga
+  offline. Las mutaciones nunca se cachean; la cola offline propia hace el replay.
+- Los iconos `public/pwa-192.png` / `public/pwa-512.png` son un **placeholder de marca**
+  (navy + círculo azul institucional) generados con `node scripts/generar-iconos-pwa.mjs`
+  (sin dependencias). Sustituir por el logo real del plantel cuando exista.
+- El cache runtime no distingue el header `Authorization` (cachea por URL): se asume
+  dispositivo personal y **al cerrar sesión se borran todos los caches del SW** (`salir()`).
+
+## Lint
+`eslint.config.js` (flat, ESLint 9): `@eslint/js` + `typescript-eslint` recommended (sin modo
+type-checked), `eslint-plugin-react-hooks` (rules-of-hooks / exhaustive-deps) y
+`eslint-plugin-jsx-a11y` recommended. Se instala todo con `npm install`.
 
 ## Estructura
 ```
 src/
-  api/        client axios (baseURL + Bearer + 401→login) y helpers de error
-  auth/       AuthContext (sesión desde JWT) + decodificación del token
-  routes/     ProtectedRoute (exige sesión; fuerza cambio de contraseña, RF-AUTH-04)
-  components/ AppShell (cabecera + salir)
-  pages/      LoginPage, CambiarContrasenaPage, PanelPage (panel docente)
+  api/        client axios (baseURL + Bearer + 401→login), queryClient compartido,
+              cola offline (pendientes + rechazadas) y helpers de error
+  auth/       AuthContext (sesión desde JWT, exp verificado) + decodificación del token
+  routes/     ProtectedRoute (exige sesión; fuerza cambio de contraseña; roles por ruta)
+  components/ AppShell (cabecera + burger/drawer móvil + indicador de cola + salir)
+  lib/        fechas (hoyLocalISO, zona America/Mexico_City) y useDirtyGuard
+  pages/      LoginPage, CambiarContrasenaPage, PanelPage, NotFoundPage, etc.
   theme.ts    tema Mantine
   main.tsx    providers: Mantine + QueryClient + Auth + Router
+scripts/      generar-iconos-pwa.mjs (iconos placeholder 192/512)
 ```
 
 ## Estado (slices de I9)

@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './routes/ProtectedRoute';
+import { NotFoundPage } from './pages/NotFoundPage';
 import { AppShell } from './components/AppShell';
 import { LoginPage } from './pages/LoginPage';
 import { CambiarContrasenaPage } from './pages/CambiarContrasenaPage';
@@ -21,15 +22,18 @@ export function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<PanelPage />} />
           <Route path="/cursos" element={<CursosPage />} />
-          <Route path="/cadetes" element={<CadetesPage />} />
-          <Route path="/catalogos" element={<CatalogosPage />} />
+          {/* FB-F-14: gestión de cadetes y catálogos solo Coordinador/Operador (espejo de AppShell.links) */}
+          <Route element={<ProtectedRoute roles={['Coordinador', 'Operador']} />}>
+            <Route path="/cadetes" element={<CadetesPage />} />
+            <Route path="/catalogos" element={<CatalogosPage />} />
+          </Route>
           <Route path="/cursos/:cursoId/asistencia" element={<AsistenciaPage />} />
           <Route path="/cursos/:cursoId/parciales" element={<ParcialesPage />} />
           <Route path="/cursos/:cursoId/calificaciones" element={<CalificacionesPage />} />
           <Route path="/cursos/:cursoId/acta" element={<ActaPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

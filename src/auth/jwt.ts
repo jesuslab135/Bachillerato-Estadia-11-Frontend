@@ -13,8 +13,10 @@ export function decodificarSesion(token: string): Sesion | null {
   try {
     const payload = token.split('.')[1];
     const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-    const p = JSON.parse(json) as Partial<Sesion>;
+    const p = JSON.parse(json) as Partial<Sesion> & { exp?: number };
     if (!p.sub || !p.rol) return null;
+    // FB-F-14: un token expirado no arranca sesión (evita el flash de errores 401 + redirect duro).
+    if (typeof p.exp === 'number' && p.exp * 1000 <= Date.now()) return null;
     return {
       sub: p.sub,
       email: p.email ?? '',

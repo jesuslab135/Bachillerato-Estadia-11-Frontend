@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { MantineProvider, ColorSchemeScript } from '@mantine/core';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './global.css';
@@ -10,11 +10,8 @@ import { Notifications } from '@mantine/notifications';
 import { theme } from './theme';
 import { AuthProvider } from './auth/AuthContext';
 import { App } from './App';
+import { queryClient } from './api/queryClient';
 import { sincronizar } from './api/offlineQueue';
-
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
-});
 
 // RF-ASIS-06 — al recuperar la conexión, se sincronizan las capturas pendientes.
 window.addEventListener('online', () => void sincronizar());

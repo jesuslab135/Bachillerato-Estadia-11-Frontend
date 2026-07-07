@@ -21,4 +21,14 @@ describe('decodificarSesion', () => {
   it('devuelve null ante un token corrupto', () => {
     expect(decodificarSesion('no-es-un-jwt')).toBeNull();
   });
+
+  it('devuelve null si el token ya expiró (FB-F-14)', () => {
+    const expirado = Math.floor(Date.now() / 1000) - 60;
+    expect(decodificarSesion(fakeJwt({ sub: 'u1', rol: 'Docente', exp: expirado }))).toBeNull();
+  });
+
+  it('acepta un token con exp en el futuro', () => {
+    const vigente = Math.floor(Date.now() / 1000) + 3600;
+    expect(decodificarSesion(fakeJwt({ sub: 'u1', rol: 'Docente', exp: vigente }))).not.toBeNull();
+  });
 });

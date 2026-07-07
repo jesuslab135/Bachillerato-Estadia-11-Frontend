@@ -127,7 +127,8 @@ export function CadetesPage() {
           <Card withBorder radius="md">
             <Importar grupoId={grupoId} />
           </Card>
-          <Table striped withTableBorder>
+          <Table.ScrollContainer minWidth={520}>
+            <Table striped withTableBorder>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Cadete</Table.Th>
@@ -162,7 +163,8 @@ export function CadetesPage() {
                 </Table.Tr>
               ))}
             </Table.Tbody>
-          </Table>
+            </Table>
+          </Table.ScrollContainer>
         </>
       )}
     </Stack>

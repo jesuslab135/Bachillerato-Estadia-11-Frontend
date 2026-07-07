@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 
 vi.mock('../api/client', () => ({
@@ -58,6 +59,28 @@ function render() {
 }
 
 describe('AsistenciaPage', () => {
+  it('no muestra "Curso no encontrado" mientras los cursos cargan (FB-F-15)', () => {
+    get.mockImplementation((url: string) => {
+      if (url === '/api/cursos') return new Promise(() => {});
+      return Promise.resolve({ data: [] });
+    });
+    render();
+    expect(screen.queryByText('Curso no encontrado.')).not.toBeInTheDocument();
+  });
+
+  it('conserva el código tecleado cuando la asistencia refetchea (FB-F-13)', async () => {
+    const user = userEvent.setup();
+    const { queryClient } = render();
+    const control = await screen.findByLabelText('Código de asistencia Ana Activa');
+    await user.click(within(control).getByRole('radio', { name: 'F' }));
+    expect(within(control).getByRole('radio', { name: 'F' })).toBeChecked();
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['asistencia'] });
+    });
+    const controlDespues = screen.getByLabelText('Código de asistencia Ana Activa');
+    expect(within(controlDespues).getByRole('radio', { name: 'F' })).toBeChecked();
+  });
+
   it('muestra el roster con la alerta SDE (RN-01)', async () => {
     render();
     expect(await screen.findByText('Ana Activa')).toBeInTheDocument();

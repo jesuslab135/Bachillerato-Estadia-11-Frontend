@@ -51,8 +51,11 @@ export function PanelPage() {
   const esDocente = sesion?.rol === 'Docente';
   const esCoordOp = !!sesion && sesion.rol !== 'Docente';
 
+  // FB-F-14: el panel es un endpoint de docente — no se llama para Coordinador/Operador, y la
+  // clave se scopea por usuario para no filtrar datos entre sesiones en la misma máquina.
   const { data, isLoading } = useQuery({
-    queryKey: ['panel-docente'],
+    queryKey: ['panel-docente', sesion?.sub],
+    enabled: esDocente,
     queryFn: async () => (await api.get<{ cursos: CursoPanel[] }>('/api/docente/panel')).data,
   });
   const cursos = data?.cursos ?? [];
