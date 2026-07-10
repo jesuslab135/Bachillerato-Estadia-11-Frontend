@@ -5,6 +5,13 @@ PWA en **Vite + React + TypeScript**, con **Mantine** (componentes/a11y) + **Tai
 **TanStack Query** (server-state). Consume la API NestJS de `../backend` (prefijo `/api`).
 Todas las dependencias se instalan con `npm install` (incluye Tailwind/PostCSS); sin pasos manuales.
 
+**Sistema de diseño (rediseño 2026-07):** display face **Archivo** (títulos/números/logo) + **Inter**
+(UI/cuerpo) + **JetBrains Mono** (códigos/matrículas/hashes), cargadas por Google Fonts en
+`index.html`. Los tokens viven en `src/theme.ts` (Mantine) y como variables `--sga-*` en
+`src/global.css` (navy `#0b1e40`, dorado ceremonial `#e2c07a`, semánticos, sombras), con espejo en
+`tailwind.config.js`. Primitivas reutilizables en `src/components/ui.tsx` (`StatusPill`, `CourseAvatar`,
+`Panel`, `SectionTitle`); chrome en `AppShell.tsx` + `CursoContextBar.tsx`; acceso en split en `AuthLayout.tsx`.
+
 ## Requisitos
 - Node 20+. El backend debe correr en `http://localhost:3000` (ver `../backend/README.md`).
 

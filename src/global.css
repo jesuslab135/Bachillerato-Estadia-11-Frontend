@@ -2,27 +2,133 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sistema de diseño (FB-F-1/3/4) — capa global. */
+/* =========================================================================
+   Sistema de diseño — Rediseño 2026-07 (Archivo + Inter, azul institucional).
+   Tokens del canvas expuestos como variables CSS para consumo desde componentes.
+   ========================================================================= */
 :root {
   color-scheme: light;
+
+  /* Marca / primario */
+  --sga-primary: #1d4ed8;
+  --sga-primary-hover: #1e40af;
+  --sga-primary-tint: #eff6ff;
+  --sga-primary-border: #dbeafe;
+
+  /* Superficie institucional navy + acento ceremonial dorado (uso escaso) */
+  --sga-navy: #0b1e40;
+  --sga-navy-deep: #0a1730;
+  --sga-navy-logo: #1c4a86;
+  --sga-gold: #e2c07a;
+
+  /* Texto (rampa slate) */
+  --sga-text-strong: #0f172a;
+  --sga-text: #334155;
+  --sga-text-body: #475569;
+  --sga-text-muted: #64748b;
+  --sga-text-faint: #94a3b8;
+
+  /* Bordes / divisores / superficies */
+  --sga-frame-border: #dbe1ea;
+  --sga-border: #e2e8f0;
+  --sga-divider: #eef1f5;
+  --sga-input-border: #cbd5e1;
+  --sga-surface: #ffffff;
+  --sga-surface-subtle: #f8fafc;
+  --sga-zebra: #fbfcfe;
+  --sga-chip: #f1f5f9;
+  --sga-canvas: #e7ebf1;
+
+  /* Semánticos */
+  --sga-success: #16a34a;
+  --sga-success-dark: #166534;
+  --sga-success-bg: #dcfce7;
+  --sga-warning: #b45309;
+  --sga-warning-dot: #d97706;
+  --sga-warning-bg: #fef3c7;
+  --sga-warning-row: #fff7ed;
+  --sga-danger: #b91c1c;
+  --sga-danger-dot: #dc2626;
+  --sga-danger-bg: #fee2e2;
+  --sga-danger-row: #fef2f2;
+  --sga-danger-border: #fecaca;
+
+  /* Sombras nombradas */
+  --sga-shadow-rest: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --sga-shadow-frame: 0 1px 2px rgba(15, 23, 42, 0.04), 0 24px 60px -22px rgba(15, 23, 42, 0.28);
+  --sga-shadow-hover: 0 12px 28px -16px rgba(29, 78, 216, 0.28);
+  --sga-shadow-btn: 0 6px 16px -6px rgba(29, 78, 216, 0.6);
+  --sga-ring: 0 0 0 3px rgba(29, 78, 216, 0.16);
 }
 
 body {
-  background: #ffffff; /* canvas */
-  color: #475569; /* body — slate-600 */
+  background: #ffffff; /* lienzo de la app (el contenido autenticado es blanco) */
+  color: var(--sga-text-body); /* slate-600 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Firma de la display face (Cal Sans → Inter 600): tracking negativo en títulos. */
+/* Display face (Archivo): tracking negativo suave en títulos. */
 .mantine-Title-root,
 h1,
 h2,
 h3 {
-  letter-spacing: -0.04em;
+  font-family: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.02em;
 }
 
-/* Animación de entrada de contenido (FB-F-4). Sobria. */
+/* Pills de navegación del header: hover sutil en los inactivos. */
+.sga-nav-pill {
+  transition: background 140ms ease, color 140ms ease;
+}
+.sga-nav-pill:not([data-activo]):hover {
+  background: var(--sga-chip) !important;
+  color: var(--sga-text-strong) !important;
+}
+
+/* Botón primario (filled) con el resplandor azul del sistema. */
+.mantine-Button-root[data-variant='filled'] {
+  box-shadow: var(--sga-shadow-btn);
+}
+
+/* Anillo de foco azul en campos de formulario. */
+.mantine-Input-input:focus,
+.mantine-Input-input:focus-within {
+  box-shadow: var(--sga-ring);
+}
+
+/* Canvas con retícula de puntos (fondos de marca — login / pantallas de acceso). */
+.sga-dot-canvas {
+  background-color: var(--sga-canvas);
+  background-image: radial-gradient(rgba(15, 23, 42, 0.055) 1px, transparent 1.5px);
+  background-size: 26px 26px;
+}
+
+/* Split de acceso: una columna en móvil, panel de marca + formulario en ≥md (62em). */
+[data-auth-split] {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 62em) {
+  [data-auth-split] {
+    grid-template-columns: 400px 1fr;
+  }
+}
+
+/* Panel de marca navy (login 1a / cambiar contraseña 2g). */
+.sga-navy-panel {
+  background:
+    radial-gradient(120% 75% at 82% -8%, rgba(37, 99, 235, 0.42), transparent 58%),
+    repeating-linear-gradient(132deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 24px),
+    linear-gradient(178deg, #0b1e40, #0a1730);
+}
+
+/* Tile del logo (gradiente navy + borde dorado). */
+.sga-logo-tile {
+  background: linear-gradient(155deg, #1c4a86, #0a1730);
+  border: 1px solid rgba(226, 192, 122, 0.5);
+}
+
+/* Animación de entrada de contenido. Sobria. */
 @keyframes sga-fade-up {
   from {
     opacity: 0;
@@ -38,13 +144,14 @@ h3 {
   animation: sga-fade-up 260ms ease-out both;
 }
 
-/* Elevación al pasar el cursor sobre tarjetas interactivas. */
+/* Elevación azulada al pasar el cursor sobre tarjetas interactivas. */
 .sga-card-hover {
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }
 .sga-card-hover:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(29, 78, 216, 0.12);
+  box-shadow: var(--sga-shadow-hover);
+  border-color: #bfdbfe;
 }
 
 /* Respeta la preferencia del usuario: sin movimiento. */

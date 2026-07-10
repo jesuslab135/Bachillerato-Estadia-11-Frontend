@@ -16,6 +16,8 @@ export interface Curso {
   id: string;
   materia: { clave: string; nombre: string };
   grupo: { id: string; nombre: string };
+  // El backend (GET /api/cursos) incluye el periodo; opcional aquí para no romper mocks de prueba.
+  periodo?: { codigo: string };
 }
 
 export interface Cadete {

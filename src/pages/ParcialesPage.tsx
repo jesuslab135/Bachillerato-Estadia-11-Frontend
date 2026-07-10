@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Alert, Badge, Button, Card, Group, Loader, Modal, NumberInput, Stack, Text, Textarea, Title } from '@mantine/core';
+import { Alert, Button, Card, Group, Loader, Modal, NumberInput, Stack, Text, Textarea, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { mensajeError } from '../api/errores';
 import { useAuth } from '../auth/AuthContext';
+import { useCursos } from '../features/asistencia';
+import { CursoContextBar } from '../components/CursoContextBar';
+import { StatusPill, type Tono } from '../components/ui';
 import {
   accionesWorkflow,
   esEditable,
@@ -19,11 +22,11 @@ import {
 // El backend exige un motivo de reapertura de al menos 30 caracteres (RN-06).
 const MIN_MOTIVO = 30;
 
-const COLOR_ESTADO: Record<string, string> = {
-  Borrador: 'gray',
+const TONO_ESTADO: Record<string, Tono> = {
+  Borrador: 'neutral',
   CerradoDocente: 'blue',
-  Validado: 'green',
-  Reabierto: 'orange',
+  Validado: 'success',
+  Reabierto: 'warning',
 };
 
 function ParcialCard({ cursoId, parcial }: { cursoId: string; parcial: Parcial }) {
@@ -74,10 +77,10 @@ function ParcialCard({ cursoId, parcial }: { cursoId: string; parcial: Parcial }
   };
 
   return (
-    <Card withBorder radius="md" className="sga-card-hover">
+    <Card withBorder radius="lg" padding="lg" shadow="xs" className="sga-card-hover">
       <Group justify="space-between" mb="sm">
         <Title order={4}>Parcial {parcial.numero}</Title>
-        <Badge color={COLOR_ESTADO[parcial.estado] ?? 'gray'}>{parcial.estado}</Badge>
+        <StatusPill tono={TONO_ESTADO[parcial.estado] ?? 'neutral'}>{parcial.estado}</StatusPill>
       </Group>
 
       <Group align="flex-end" wrap="wrap">
@@ -170,13 +173,19 @@ function ParcialCard({ cursoId, parcial }: { cursoId: string; parcial: Parcial }
 export function ParcialesPage() {
   const { cursoId = '' } = useParams();
   const { data, isLoading, isError } = useParciales(cursoId);
+  const { data: cursos } = useCursos();
+  const curso = cursos?.find((c) => c.id === cursoId);
 
   if (isLoading) return <Loader />;
   if (isError) return <Alert color="red">No fue posible cargar los parciales.</Alert>;
 
   return (
     <Stack className="sga-anim-in">
-      <Title order={3}>Parciales y ponderación</Title>
+      {curso ? (
+        <CursoContextBar cursoId={cursoId} curso={curso} activo="parciales" />
+      ) : (
+        <Title order={1}>Parciales y ponderación</Title>
+      )}
       {(data ?? []).map((p) => (
         <ParcialCard key={p.numero} cursoId={cursoId} parcial={p} />
       ))}

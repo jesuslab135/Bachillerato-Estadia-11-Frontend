@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Alert,
-  Badge,
+  Box,
   Button,
   Card,
   CopyButton,
@@ -15,8 +15,10 @@ import {
   TextInput,
   Title,
 } from '@mantine/core';
+import { IconInfoCircle } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { mensajeError } from '../api/errores';
+import { SectionTitle, StatusPill } from '../components/ui';
 import { useAuth } from '../auth/AuthContext';
 import { useCursos } from '../features/asistencia';
 import { useGrupos } from '../features/cadetes';
@@ -59,10 +61,10 @@ function SeccionGrupos({ plantelId }: { plantelId: string }) {
   const [semestre, setSemestre] = useState<number | string>(1);
   return (
     <Stack>
-      <Card withBorder>
-        <Title order={5} mb="sm">
-          Nuevo grupo
-        </Title>
+      <Card withBorder radius="lg" padding={22} shadow="xs">
+        <Box mb="sm">
+          <SectionTitle>Nuevo grupo</SectionTitle>
+        </Box>
         <Group align="flex-end">
           <TextInput label="Nombre" placeholder="2do A" value={nombre} onChange={(e) => setNombre(e.currentTarget.value)} />
           <NumberInput label="Semestre" w={110} min={1} max={6} value={semestre} onChange={setSemestre} />
@@ -128,10 +130,10 @@ function SeccionPeriodos({ plantelId }: { plantelId: string }) {
   const [fin, setFin] = useState('');
   return (
     <Stack>
-      <Card withBorder>
-        <Title order={5} mb="sm">
-          Nuevo periodo
-        </Title>
+      <Card withBorder radius="lg" padding={22} shadow="xs">
+        <Box mb="sm">
+          <SectionTitle>Nuevo periodo</SectionTitle>
+        </Box>
         <Group align="flex-end">
           <TextInput label="Código" placeholder="2025-2026-1" value={codigo} onChange={(e) => setCodigo(e.currentTarget.value)} />
           <TextInput type="date" label="Inicio" value={inicio} onChange={(e) => setInicio(e.currentTarget.value)} />
@@ -164,7 +166,7 @@ function SeccionPeriodos({ plantelId }: { plantelId: string }) {
             {(periodos ?? []).map((p) => (
               <Table.Tr key={p.id}>
                 <Table.Td>{p.codigo}</Table.Td>
-                <Table.Td>{p.activo ? <Badge color="teal">Activo</Badge> : <Badge color="gray">Inactivo</Badge>}</Table.Td>
+                <Table.Td>{p.activo ? <StatusPill tono="success">Activo</StatusPill> : <StatusPill tono="neutral">Inactivo</StatusPill>}</Table.Td>
                 <Table.Td>
                   {!p.activo && (
                     <Button size="xs" variant="subtle" loading={activar.isPending} onClick={() => activar.mutate(p.id, { onSuccess: () => ok('Periodo activado'), onError: (e) => fail(e, 'No fue posible activar') })}>
@@ -194,10 +196,10 @@ function SeccionCursos() {
 
   return (
     <Stack>
-      <Card withBorder>
-        <Title order={5} mb="sm">
-          Nuevo curso
-        </Title>
+      <Card withBorder radius="lg" padding={22} shadow="xs">
+        <Box mb="sm">
+          <SectionTitle>Nuevo curso</SectionTitle>
+        </Box>
         <Group align="flex-end" wrap="wrap">
           <Select label="Materia" w={200} searchable data={(materias ?? []).map((m) => ({ value: m.id, label: `${m.clave} — ${m.nombre}` }))} value={form.materiaId} onChange={set('materiaId')} />
           <Select label="Grupo" w={150} data={(grupos ?? []).map((g) => ({ value: g.id, label: g.nombre }))} value={form.grupoId} onChange={set('grupoId')} />
@@ -219,6 +221,12 @@ function SeccionCursos() {
             Crear curso
           </Button>
         </Group>
+        <Group gap={7} mt="sm" wrap="nowrap">
+          <IconInfoCircle size={15} color="var(--sga-text-faint)" />
+          <Text fz={12} c="var(--sga-text-faint)">
+            Al crear el curso se generan automáticamente 3 parciales y 15 criterios de evaluación.
+          </Text>
+        </Group>
       </Card>
 
       <Table.ScrollContainer minWidth={520}>
@@ -227,6 +235,7 @@ function SeccionCursos() {
             <Table.Tr>
               <Table.Th>Materia</Table.Th>
               <Table.Th>Grupo</Table.Th>
+              <Table.Th>Periodo</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -236,9 +245,14 @@ function SeccionCursos() {
                   {c.materia.clave} — {c.materia.nombre}
                 </Table.Td>
                 <Table.Td>{c.grupo.nombre}</Table.Td>
+                <Table.Td>
+                  <Text size="sm" ff="JetBrains Mono" c="var(--sga-text-muted)">
+                    {c.periodo?.codigo ?? '—'}
+                  </Text>
+                </Table.Td>
               </Table.Tr>
             ))}
-            {(cursos ?? []).length === 0 && <Vacio colSpan={2} texto="Aún no hay cursos." />}
+            {(cursos ?? []).length === 0 && <Vacio colSpan={3} texto="Aún no hay cursos." />}
           </Table.Tbody>
         </Table>
       </Table.ScrollContainer>
@@ -253,8 +267,13 @@ export function CatalogosPage() {
   const plantelId = sesion?.plantelId ?? plantelSel;
 
   return (
-    <Stack className="sga-anim-in">
-      <Title order={3}>Catálogos y cursos</Title>
+    <Stack gap={24} className="sga-anim-in">
+      <div>
+        <Title order={1}>Catálogos y cursos</Title>
+        <Text c="var(--sga-text-muted)" mt={6} fz={14}>
+          Administración del plantel.
+        </Text>
+      </div>
       {!sesion?.plantelId && (
         <Select
           label="Plantel (Operador)"

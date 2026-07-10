@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Alert, Badge, Button, Group, Loader, SegmentedControl, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import { Alert, Box, Button, Group, Loader, SegmentedControl, Stack, Table, Text, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { CursoContextBar } from '../components/CursoContextBar';
+import { StatusPill } from '../components/ui';
 import { mensajeError } from '../api/errores';
 import { hoyLocalISO } from '../lib/fechas';
 import { MENSAJE_DIRTY, useDirtyGuard } from '../lib/useDirtyGuard';
@@ -92,23 +94,39 @@ export function AsistenciaPage() {
     );
   };
 
+  const LEYENDA: { cod: Codigo; fg: string; bg: string }[] = [
+    { cod: 'A', fg: '#16a34a', bg: '#dcfce7' },
+    { cod: 'F', fg: '#b91c1c', bg: '#fee2e2' },
+    { cod: 'R', fg: '#b45309', bg: '#fef3c7' },
+    { cod: 'J', fg: '#1d4ed8', bg: '#eff6ff' },
+  ];
+
   return (
     <Stack className="sga-anim-in">
-      <Title order={3}>
-        Asistencia · {curso.materia.clave} — {curso.grupo.nombre}
-      </Title>
+      <CursoContextBar cursoId={cursoId} curso={curso} activo="asistencia" />
 
-      <Group align="flex-end">
-        <TextInput type="date" label="Fecha" value={fecha} onChange={(e) => cambiarFecha(e.currentTarget.value)} />
+      <Group align="flex-end" wrap="wrap" gap={22}>
+        <TextInput type="date" label="Fecha" value={fecha} onChange={(e) => cambiarFecha(e.currentTarget.value)} w={160} />
         <div>
-          <Text size="sm" fw={500} mb={4} id="label-parcial-sde">
+          <Text size="sm" fw={500} mb={6} id="label-parcial-sde" c="var(--sga-text)">
             Parcial (para SDE)
           </Text>
           <SegmentedControl value={parcial} onChange={setParcial} data={['1', '2', '3']} aria-labelledby="label-parcial-sde" />
         </div>
-        <Button onClick={guardar} loading={capturar.isPending} ml="auto">
-          Guardar asistencia
-        </Button>
+        <Group gap={10} ml="auto" align="center">
+          <Group gap={8} visibleFrom="sm" aria-hidden>
+            {LEYENDA.map((l) => (
+              <Group key={l.cod} gap={5} wrap="nowrap">
+                <Box style={{ width: 18, height: 18, borderRadius: 5, background: l.bg, color: l.fg, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {l.cod}
+                </Box>
+              </Group>
+            ))}
+          </Group>
+          <Button onClick={guardar} loading={capturar.isPending}>
+            Guardar asistencia
+          </Button>
+        </Group>
       </Group>
 
       <Table.ScrollContainer minWidth={640}>
@@ -126,10 +144,18 @@ export function AsistenciaPage() {
             const resumenFila = sdePorCadete.get(c.matricula);
             const bajaDef = c.estatus === 'BajaDefinitiva';
             return (
-              <Table.Tr key={c.matricula} bg={bajaDef ? 'var(--mantine-color-red-0)' : resumenFila?.sde ? 'var(--mantine-color-orange-0)' : undefined}>
+              <Table.Tr
+                key={c.matricula}
+                style={{
+                  background: bajaDef ? 'var(--sga-danger-row)' : resumenFila?.sde ? 'var(--sga-warning-row)' : undefined,
+                  opacity: bajaDef ? 0.75 : undefined,
+                }}
+              >
                 <Table.Td>
-                  <Text size="sm">{c.nombreCompleto}</Text>
-                  <Text size="xs" c="dimmed">
+                  <Text size="sm" fw={500} c="var(--sga-text-strong)">
+                    {c.nombreCompleto}
+                  </Text>
+                  <Text size="xs" c="var(--sga-text-faint)" ff="JetBrains Mono">
                     {c.matricula}
                   </Text>
                 </Table.Td>
@@ -155,9 +181,9 @@ export function AsistenciaPage() {
                   )}
                 </Table.Td>
                 <Table.Td>
-                  {bajaDef && <Badge color="red">Baja definitiva</Badge>}
-                  {!bajaDef && resumenFila?.sde && <Badge color="orange">SDE</Badge>}
-                  {!bajaDef && resumenFila && !resumenFila.sde && <Badge color="green" variant="light">Con derecho</Badge>}
+                  {bajaDef && <StatusPill tono="danger">Baja definitiva</StatusPill>}
+                  {!bajaDef && resumenFila?.sde && <StatusPill tono="warning">SDE</StatusPill>}
+                  {!bajaDef && resumenFila && !resumenFila.sde && <StatusPill tono="success">Con derecho</StatusPill>}
                 </Table.Td>
               </Table.Tr>
             );

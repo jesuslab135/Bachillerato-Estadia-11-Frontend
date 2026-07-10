@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Alert,
-  Badge,
   Button,
   Card,
   Divider,
@@ -11,6 +10,7 @@ import {
   NumberInput,
   SegmentedControl,
   Select,
+  SimpleGrid,
   Stack,
   Switch,
   Table,
@@ -21,6 +21,9 @@ import {
 import { notifications } from '@mantine/notifications';
 import { mensajeError } from '../api/errores';
 import { MENSAJE_DIRTY, useDirtyGuard } from '../lib/useDirtyGuard';
+import { CursoContextBar } from '../components/CursoContextBar';
+import { SectionTitle, StatusPill } from '../components/ui';
+import { useCursos } from '../features/asistencia';
 import { esEditable, useParciales } from '../features/parciales';
 import {
   examenInicial,
@@ -259,7 +262,7 @@ function CapturaExamen({
   return (
     <Stack>
       <Group justify="space-between">
-        <Text fw={600}>Examen del parcial</Text>
+        <SectionTitle>Examen del parcial</SectionTitle>
         <Button variant="light" disabled={!editable} loading={capturar.isPending} onClick={guardar}>
           Guardar examen
         </Button>
@@ -302,7 +305,7 @@ function CapturaExamen({
                       aria-label={`NP ${c.nombreCompleto}`}
                     />
                   </Table.Td>
-                  <Table.Td>{esSde && <Badge color="orange">SDE</Badge>}</Table.Td>
+                  <Table.Td>{esSde && <StatusPill tono="warning">SDE</StatusPill>}</Table.Td>
                 </Table.Tr>
               );
             })}
@@ -338,8 +341,12 @@ function Resultados({ cursoId, numero }: { cursoId: string; numero: number }) {
               <Table.Td>{f.evaluacionContinua.toFixed(2)}</Table.Td>
               <Table.Td>{f.califCruda.toFixed(2)}</Table.Td>
               <Table.Td>
-                <Text fw={600}>{f.califFinal}</Text>
-                {f.sde && <Badge color="orange" ml="xs">SDE</Badge>}
+                <Group gap="xs" wrap="nowrap">
+                  <Text ff="Archivo" fw={700} fz={15} c="var(--sga-text-strong)">
+                    {f.califFinal}
+                  </Text>
+                  {f.sde && <StatusPill tono="warning">SDE</StatusPill>}
+                </Group>
               </Table.Td>
             </Table.Tr>
           ))}
@@ -355,6 +362,8 @@ export function CalificacionesPage() {
   const numero = Number(parcial);
   const { data: matriz, isLoading, isError } = useMatriz(cursoId, numero);
   const { data: parciales } = useParciales(cursoId);
+  const { data: cursos } = useCursos();
+  const curso = cursos?.find((c) => c.id === cursoId);
   const [seccionesDirty, setSeccionesDirty] = useState<Partial<Record<Seccion, boolean>>>({});
 
   const hayDirty = Object.values(seccionesDirty).some(Boolean);
@@ -380,8 +389,14 @@ export function CalificacionesPage() {
 
   return (
     <Stack className="sga-anim-in">
-      <Group justify="space-between">
-        <Title order={3}>Calificaciones — Parcial {parcial}</Title>
+      {curso && <CursoContextBar cursoId={cursoId} curso={curso} activo="calificaciones" />}
+      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+        <Group gap="sm" align="center">
+          <Title order={2}>Calificaciones — Parcial {parcial}</Title>
+          {parcialActual && (
+            <StatusPill tono={editable ? 'success' : 'blue'}>{editable ? 'Abierto' : parcialActual.estado}</StatusPill>
+          )}
+        </Group>
         <SegmentedControl value={parcial} onChange={cambiarParcial} data={['1', '2', '3']} aria-label="Parcial" />
       </Group>
 
@@ -394,16 +409,24 @@ export function CalificacionesPage() {
       )}
       {matriz && (
         <>
-          <Card withBorder radius="md">
-            <CrearActividad cursoId={cursoId} numero={numero} editable={editable} />
+          <Card withBorder radius="lg" padding={22} shadow="xs">
+            <SectionTitle>Nueva actividad</SectionTitle>
+            <div style={{ marginTop: 14 }}>
+              <CrearActividad cursoId={cursoId} numero={numero} editable={editable} />
+            </div>
           </Card>
-          <Card withBorder radius="md">
-            <CapturaActividad key={numero} cursoId={cursoId} numero={numero} matriz={matriz} editable={editable} onDirty={onDirtyActividad} />
-          </Card>
-          <Card withBorder radius="md">
-            <CapturaExamen key={numero} cursoId={cursoId} numero={numero} matriz={matriz} editable={editable} onDirty={onDirtyExamen} />
-          </Card>
-          <Divider label="Resultado del parcial" />
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing={18}>
+            <Card withBorder radius="lg" padding={22} shadow="xs">
+              <Text fw={600} fz={13} c="var(--sga-text-muted)" mb={12} tt="uppercase" style={{ letterSpacing: '.04em' }}>
+                Por actividad
+              </Text>
+              <CapturaActividad key={numero} cursoId={cursoId} numero={numero} matriz={matriz} editable={editable} onDirty={onDirtyActividad} />
+            </Card>
+            <Card withBorder radius="lg" padding={22} shadow="xs">
+              <CapturaExamen key={numero} cursoId={cursoId} numero={numero} matriz={matriz} editable={editable} onDirty={onDirtyExamen} />
+            </Card>
+          </SimpleGrid>
+          <Divider label="Resultado del parcial · cálculo en vivo (ponderación TI·TE·TA·EX)" />
           <Resultados cursoId={cursoId} numero={numero} />
         </>
       )}

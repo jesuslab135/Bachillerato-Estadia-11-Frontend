@@ -29,7 +29,7 @@ describe('LoginPage (RF-AUTH-01)', () => {
     });
     renderConProviders(<LoginPage />);
 
-    await userEvent.type(screen.getByLabelText('Correo'), 'doc@sga.local');
+    await userEvent.type(screen.getByLabelText('Correo institucional'), 'doc@sga.local');
     await userEvent.type(screen.getByLabelText('Contraseña'), 'secreto123');
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
@@ -38,7 +38,7 @@ describe('LoginPage (RF-AUTH-01)', () => {
 
   it('valida el correo y no llama al backend si es inválido', async () => {
     renderConProviders(<LoginPage />);
-    await userEvent.type(screen.getByLabelText('Correo'), 'no-es-correo');
+    await userEvent.type(screen.getByLabelText('Correo institucional'), 'no-es-correo');
     await userEvent.type(screen.getByLabelText('Contraseña'), 'x');
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
@@ -49,7 +49,7 @@ describe('LoginPage (RF-AUTH-01)', () => {
   it('muestra el error cuando el backend rechaza las credenciales', async () => {
     post.mockRejectedValue({ response: { data: { message: 'Credenciales inválidas' } }, isAxiosError: true });
     renderConProviders(<LoginPage />);
-    await userEvent.type(screen.getByLabelText('Correo'), 'doc@sga.local');
+    await userEvent.type(screen.getByLabelText('Correo institucional'), 'doc@sga.local');
     await userEvent.type(screen.getByLabelText('Contraseña'), 'malo');
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
