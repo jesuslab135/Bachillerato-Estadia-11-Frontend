@@ -77,3 +77,13 @@ scripts/      generar-iconos-pwa.mjs (iconos placeholder 192/512)
   baja definitiva RN-05) y CadetesPage; con etiquetas accesibles (aria-label) en los controles.
 - [ ] Cuadrícula avanzada de calificaciones (pegar/atajos, RF-CAL-05).
 - [ ] Auditoría formal de a11y (WCAG 2.1 AA, p. ej. jest-axe) y cobertura render del resto de pantallas.
+
+## Despliegue (producción — VPS IONOS)
+
+- **CI/CD**: `.github/workflows/deploy.yml` — cada push a `main` corre pruebas + build,
+  publica `ghcr.io/jesuslab135/sga-frontend:prod` y despliega por SSH al compose de
+  `/opt/sga` en el VPS. Secrets del repo: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
+- **Imagen**: `Dockerfile` multi-stage — build de Vite servido por nginx (`nginx.conf`:
+  SPA fallback; `index.html`/`sw.js`/manifest sin caché, `assets/` inmutables).
+- **`VITE_API_URL` queda vacío en producción**: la API comparte origen
+  (`https://app.jesuslab135.com/api` tras el reverse proxy del VPS).
